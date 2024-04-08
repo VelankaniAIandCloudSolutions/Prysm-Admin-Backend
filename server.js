@@ -17,7 +17,7 @@ app.use(cors());
 app.use(fileUpload());
 
 // Listen to Email Server
-setInterval(listenEmailServer, process.env.LIESTEN_TO_EMAIL_DELAY);
+// setInterval(listenEmailServer, process.env.LIESTEN_TO_EMAIL_DELAY);
 
 // Login
 const loginRoute = require("./routes/login");

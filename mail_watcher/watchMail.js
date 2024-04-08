@@ -8,11 +8,10 @@ const logger = require("../logger");
 
 const listenEmailServer = () => {
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
-
   const imapConfig = {
     user: process.env.EMAIL_USER,
     password: process.env.EMAIL_PASSWORD,
-    host: "mail.cipheracetech.com",
+    host: "imap.secureserver.net",
     port: 993,
     tls: true,
   };
