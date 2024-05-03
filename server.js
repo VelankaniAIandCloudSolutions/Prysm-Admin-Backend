@@ -182,6 +182,11 @@ const homepageImageRoute = require("./routes/homepageImage");
 app.use("/api/v1/homepg_img", homepageImageRoute);
 app.use("/api/v1/homepg_img/:id", homepageImageRoute);
 
+// Orders
+const orderRoute = require("./routes/order");
+app.use("/api/v1/orders", orderRoute);
+// app.use("/api/v1/homepg_img/:id", homepageImageRoute);
+
 app.listen(PORT, () => {
   console.log(`listening on port = ${PORT}`);
 });
