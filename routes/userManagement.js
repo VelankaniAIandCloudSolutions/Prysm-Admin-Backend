@@ -4,6 +4,7 @@ const router = express.Router();
 const sql = require("mssql");
 const config = require("../dbConfig");
 const logger = require("../logger");
+const bcrypt = require("bcrypt");
 const {
   verifyToken,
   decodeToken,
@@ -64,10 +65,23 @@ router.post("/", async (req, res) => {
       const pool = await sql?.connect(config);
       const userManagementData = req.body;
 
-      const encryptPassword = CryptoJS.AES.encrypt(
-        userManagementData?.password,
-        "cipherAce"
-      ).toString();
+      // const encryptPassword = CryptoJS.AES.encrypt(
+      //   userManagementData?.password,
+      //   "cipherAce"
+      // ).toString();
+
+      async function hashPassword(password) {
+        const saltRounds = 10;
+        return await bcrypt.hash(password, saltRounds);
+      }
+
+      // Example usage:
+      const hashedPassword = await hashPassword(userManagementData?.password);
+
+      console.log(
+        "hashed password while creating user which si stored in db",
+        hashedPassword
+      );
 
       let result = await pool
         ?.request()
@@ -86,7 +100,7 @@ router.post("/", async (req, res) => {
         ?.input("is_staff", sql?.Int, userManagementData?.isStaff)
         ?.input("is_superuser", sql?.Int, userManagementData?.isSuperuser)
         ?.input("updated_by_id", sql?.Int, decodedToken?.userId)
-        ?.input("password", sql?.NVarChar(128), encryptPassword)
+        ?.input("password", sql?.NVarChar(128), hashedPassword)
         ?.input(
           "last_login",
           sql?.DateTimeOffset,
@@ -188,11 +202,26 @@ router.post("/user_acc_addr", async (req, res) => {
       let decodedToken = decodeToken(token);
       const pool = await sql?.connect(config);
       const userManagementData = req.body;
+      // const key = "velankani@123456";
 
-      const encryptPassword = CryptoJS.AES.encrypt(
-        userManagementData?.password,
-        "cipherAce"
-      ).toString();
+      // const encryptPassword = CryptoJS.AES.encrypt(
+      //   userManagementData?.password,
+      //   "cipherAce"
+      // ).toString();
+
+      async function hashPassword(password) {
+        const saltRounds = 10; // This determines the complexity of the hashing algorithm
+        return await bcrypt.hash(password, saltRounds);
+      }
+
+      // Example usage:
+      const hashedPassword = await hashPassword(userManagementData?.password);
+      console.log(
+        "hashed password while creating user which si stored in db",
+        hashedPassword
+      );
+
+      // const encryptPassword = encrypt(userManagementData?.password, key);
 
       let result = await pool
         ?.request()
@@ -211,7 +240,7 @@ router.post("/user_acc_addr", async (req, res) => {
         ?.input("is_staff", sql?.Int, userManagementData?.isStaff)
         ?.input("is_superuser", sql?.Int, userManagementData?.isSuperuser)
         ?.input("updated_by_id", sql?.Int, decodedToken?.userId)
-        ?.input("password", sql?.NVarChar(128), encryptPassword)
+        ?.input("password", sql?.NVarChar(128), hashedPassword)
         ?.input(
           "last_login",
           sql?.DateTimeOffset,
