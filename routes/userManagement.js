@@ -138,10 +138,17 @@ router.put("/:id", async (req, res) => {
       const userManagementData = req.body;
       const user_id = req.params.id;
 
-      const encryptPassword = CryptoJS.AES.encrypt(
-        userManagementData?.password,
-        "cipherAce"
-      ).toString();
+      // const encryptPassword = CryptoJS.AES.encrypt(
+      //   userManagementData?.password,
+      //   "cipherAce"
+      // ).toString();
+      async function hashPassword(password) {
+        const saltRounds = 10;
+        return await bcrypt.hash(password, saltRounds);
+      }
+
+      // Example usage:
+      const hashedPassword = await hashPassword(userManagementData?.password);
 
       let result = await pool
         ?.request()
@@ -160,7 +167,7 @@ router.put("/:id", async (req, res) => {
         ?.input("is_staff", sql?.Int, userManagementData?.isStaff)
         ?.input("is_superuser", sql?.Int, userManagementData?.isSuperuser)
         ?.input("updated_by_id", sql?.Int, decodedToken?.userId)
-        ?.input("password", sql?.NVarChar(128), encryptPassword)
+        ?.input("password", sql?.NVarChar(128), hashedPassword)
         ?.input(
           "last_login",
           sql?.DateTimeOffset,
@@ -216,10 +223,10 @@ router.post("/user_acc_addr", async (req, res) => {
 
       // Example usage:
       const hashedPassword = await hashPassword(userManagementData?.password);
-      console.log(
-        "hashed password while creating user which si stored in db",
-        hashedPassword
-      );
+      // console.log(
+      //   "hashed password while creating user which si stored in db",
+      //   hashedPassword
+      // );
 
       // const encryptPassword = encrypt(userManagementData?.password, key);
 
@@ -316,10 +323,17 @@ router.put("/user_acc_addr/:id", async (req, res) => {
       const userManagementData = req.body;
       const user_id = req.params.id;
 
-      const encryptPassword = CryptoJS.AES.encrypt(
-        userManagementData?.password,
-        "cipherAce"
-      ).toString();
+      // const encryptPassword = CryptoJS.AES.encrypt(
+      //   userManagementData?.password,
+      //   "cipherAce"
+      // ).toString();
+      async function hashPassword(password) {
+        const saltRounds = 10;
+        return await bcrypt.hash(password, saltRounds);
+      }
+
+      // Example usage:
+      const hashedPassword = await hashPassword(userManagementData?.password);
 
       let result = await pool
         ?.request()
@@ -338,7 +352,7 @@ router.put("/user_acc_addr/:id", async (req, res) => {
         ?.input("is_staff", sql?.Int, userManagementData?.isStaff)
         ?.input("is_superuser", sql?.Int, userManagementData?.isSuperuser)
         ?.input("updated_by_id", sql?.Int, decodedToken?.userId)
-        ?.input("password", sql?.NVarChar(128), encryptPassword)
+        ?.input("password", sql?.NVarChar(128), hashedPassword)
         ?.input(
           "last_login",
           sql?.DateTimeOffset,
@@ -419,15 +433,22 @@ router.put("/user_acc_psw/:id", async (req, res) => {
       const pool = await sql?.connect(config);
       const userManagementData = req.body;
       const user_id = req.params.id;
-      const encryptPassword = CryptoJS.AES.encrypt(
-        userManagementData?.password,
-        "cipherAce"
-      ).toString();
+      // const encryptPassword = CryptoJS.AES.encrypt(
+      //   userManagementData?.password,
+      //   "cipherAce"
+      // ).toString();
+      async function hashPassword(password) {
+        const saltRounds = 10;
+        return await bcrypt.hash(password, saltRounds);
+      }
+
+      // Example usage:
+      const hashedPassword = await hashPassword(userManagementData?.password);
 
       let result = await pool
         ?.request()
         ?.input("user_id", sql?.Int, user_id)
-        ?.input("password", sql?.NVarChar(128), encryptPassword)
+        ?.input("password", sql?.NVarChar(128), hashedPassword)
         ?.output("userId", sql?.Int)
         ?.execute("sp_Upd_User_Password");
 
