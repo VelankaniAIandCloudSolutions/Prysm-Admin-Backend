@@ -62,7 +62,7 @@ router.post("/", async (req, res) => {
         ?.input("sender_id", sql?.Int, conversationData?.senderID)
         ?.input("receiver_id", sql?.Int, conversationData?.receiverID)
         ?.input("message", sql?.NVarChar, conversationData?.message)
-        ?.input("messaged_at",sql?.DateTime,conversationData?.messagedAt)
+        ?.input("messaged_at", sql?.DateTime, conversationData?.messagedAt)
         ?.output("conversationID", sql?.Int)
         ?.execute("sp_Ins_Upd_mail_conversation");
 
@@ -106,7 +106,7 @@ router.put("/:id", async (req, res) => {
         ?.input("sender_id", sql?.Int, conversationData?.senderID)
         ?.input("receiver_id", sql?.Int, conversationData?.receiverID)
         ?.input("message", sql?.NVarChar, conversationData?.message)
-        ?.input("messaged_at",sql?.DateTime,conversationData?.messagedAt)
+        ?.input("messaged_at", sql?.DateTime, conversationData?.messagedAt)
         ?.output("conversationID", sql?.Int)
         ?.execute("sp_Ins_Upd_mail_conversation");
 

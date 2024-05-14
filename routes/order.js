@@ -43,6 +43,69 @@ router.get("/", async (req, res) => {
     }
   }
 });
+router.get("/custom-discount", async (req, res) => {
+  try {
+    const authHeader = req?.headers?.authorization;
+    const token = authHeader?.split(" ")[1];
+    if (verifyToken(res, token)) {
+      const pool = await sql.connect(config);
+      let result = await pool.request().execute("sp_Get_Custom_Discount_Code");
+      console.log("query run");
+      const customDiscounts = result.recordsets[0].map((discount) => {
+        discount.order_info = JSON.parse(discount.order_info);
+        discount.order_info.forEach((order) => {
+          order.order_items.forEach((item) => {
+            item.product = JSON.parse(item.product);
+          });
+        });
+        discount.order_info.forEach((order) => {
+          order.user_info = JSON.parse(order.user_info);
+        });
+        return discount;
+      });
+      console.log("the discounts", customDiscounts);
+      return res.status(200).json(customDiscounts);
+    }
+  } catch (err) {
+    console.log("Error occurred while fetching custom discounts:", err);
+    logger.error(err);
+    if (!res.headersSent) {
+      handleServerError(res, err);
+    }
+  }
+});
+
+router.post("/updateDiscountStatus", async (req, res) => {
+  const { discountId, action } = req.body;
+
+  try {
+    const authHeader = req.headers.authorization;
+    const token = authHeader.split(" ")[1];
+    if (verifyToken(res, token)) {
+      const pool = await sql.connect(config);
+
+      let result;
+      if (action === "Approve" || action === "Reject") {
+        result = await pool
+          .request()
+          .input("discountId", sql.Int, discountId)
+          .input("Action", sql.NVarChar(255), action)
+          .execute("dbo.sp_Custom_Discount_Code_Status");
+      } else {
+        return res.status(400).json({ error: "Invalid action provided." });
+      }
+
+      await sql.close();
+
+      res.json({
+        message: "Discount status updated successfully.",
+      });
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "An unexpected error occurred." });
+  }
+});
 
 router.get("/:id", async (req, res) => {
   try {
@@ -80,16 +143,16 @@ router.get("/:id", async (req, res) => {
         }
       });
       order.order_bills = JSON.parse(order?.order_bills);
-      if (order?.razorpay_order_id) {
-        var instance = new Razorpay({
-          key_id: process.env.RAZORPAY_KEY_ID,
-          key_secret: process.env.RAZORPAY_KEY_SECRET,
-        });
-        paymentInfo = instance.payments.fetch(order?.razorpay_order_id, {
-          "expand[]": "card",
-        });
-        order.payment_info = paymentInfo;
-      }
+      // if (order?.razorpay_order_id) {
+      //   var instance = new Razorpay({
+      //     key_id: process.env.RAZORPAY_KEY_ID,
+      //     key_secret: process.env.RAZORPAY_KEY_SECRET,
+      //   });
+      //   paymentInfo = instance.payments.fetch(order?.razorpay_order_id, {
+      //     "expand[]": "card",
+      //   });
+      //   order.payment_info = paymentInfo;
+      // }
       return res.status(200).json(order);
     }
   } catch (err) {
