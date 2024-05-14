@@ -100,6 +100,57 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+function groupByCategory(options) {
+  const groupedOptions = {};
+
+  options.forEach((option) => {
+    const category = option.customization_option.customization_category;
+
+    if (!groupedOptions[category.customization_category_id]) {
+      groupedOptions[category.customization_category_id] = {
+        name: category.name,
+        order_item_customization_options: [],
+      };
+    }
+
+    groupedOptions[
+      category.customization_category_id
+    ].order_item_customization_options.push(option);
+  });
+
+  return Object.values(groupedOptions);
+}
+
+router.get("/order_item_customizations/:id", async (req, res) => {
+  try {
+    const authHeader = req?.headers?.authorization;
+    const token = authHeader?.split(" ")[1];
+    const { id } = req.params;
+    if (verifyToken(res, token)) {
+      const pool = await sql?.connect(config);
+      let result = await pool
+        ?.request()
+        ?.input("order_item_id", sql?.Int, id)
+        ?.execute("sp_Get_OrderItem_Customizations_By_ID");
+      order_item = result.recordsets[0][0];
+      order_item.product = JSON.parse(order_item?.product);
+      order_item.order_item_customization_options = JSON.parse(
+        order_item?.order_item_customization_options
+      );
+      const groupedByCategory = groupByCategory(
+        order_item?.order_item_customization_options
+      );
+      order_item.order_item_customization_options = groupedByCategory;
+      return res.status(200).json(order_item);
+    }
+  } catch (err) {
+    logger.error(err);
+    if (!res.headersSent) {
+      handleServerError(res, err);
+    }
+  }
+});
+
 // router.get("/:id", async (req, res) => {
 //   const { id } = req.params;
 //   try {
