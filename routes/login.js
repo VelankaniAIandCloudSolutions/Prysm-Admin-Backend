@@ -99,7 +99,6 @@ router.post("/", async (req, res) => {
 
     async function verifyPassword(password, hashedPassword) {
       const isMatch = await bcrypt.compare(password, hashedPassword);
-      console.log("Password match result:", isMatch);
 
       return isMatch;
     }
@@ -110,9 +109,6 @@ router.post("/", async (req, res) => {
     // const hashedPassword = await hashPassword(password);
 
     for (const val of userList) {
-      console.log("Processing user:", val.email);
-
-      console.log("User's password:", val.password);
       const isMatch = await verifyPassword(password, val.password);
 
       if (username === val.email && isMatch) {
