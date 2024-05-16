@@ -12,6 +12,7 @@ const {
   handleServerError,
 } = require("../Helper/helper");
 const { s3download, s3upload, s3delete } = require("../Helper/S3Helper");
+const { sendEmail } = require("../send_mail/sendMail");
 
 router.get("/", async (req, res) => {
   try {
@@ -52,15 +53,16 @@ router.get("/custom-discount", async (req, res) => {
       let result = await pool.request().execute("sp_Get_Custom_Discount_Code");
       console.log("query run");
       const customDiscounts = result.recordsets[0].map((discount) => {
+        console.log("uhuh");
+
         discount.order_info = JSON.parse(discount.order_info);
-        discount.order_info.forEach((order) => {
-          order.order_items.forEach((item) => {
-            item.product = JSON.parse(item.product);
-          });
+        console.log(discount.order_info);
+        discount.order_info.order_items.forEach((item) => {
+          item.product = JSON.parse(item.product);
         });
-        discount.order_info.forEach((order) => {
-          order.user_info = JSON.parse(order.user_info);
-        });
+        discount.order_info.user_info = JSON.parse(
+          discount.order_info.user_info
+        );
         return discount;
       });
       console.log("the discounts", customDiscounts);
@@ -76,7 +78,7 @@ router.get("/custom-discount", async (req, res) => {
 });
 
 router.post("/updateDiscountStatus", async (req, res) => {
-  const { discountId, action } = req.body;
+  const { discountId, action, order } = req.body;
 
   try {
     const authHeader = req.headers.authorization;
@@ -91,6 +93,80 @@ router.post("/updateDiscountStatus", async (req, res) => {
           .input("discountId", sql.Int, discountId)
           .input("Action", sql.NVarChar(255), action)
           .execute("dbo.sp_Custom_Discount_Code_Status");
+
+        if (action === "Approve") {
+          const recipientEmail = "ankitrajgaya2000@gmail.com";
+          const subject = "Discount Approved for the Order";
+
+          const total_price =
+            order?.order_info?.order_items?.reduce(
+              (acc, item) => acc + item.product.price * item.quantity,
+              0
+            ) || 0;
+
+          const discount_price = order?.amount || 0;
+          const price_after_discount = total_price - discount_price;
+
+          const body = `
+          <p>Congratulations!</p>
+          <p>The discount for your order has been approved.</p>
+
+          <div className="table-responsive">
+            <table className="table table-hover">
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Quantity</th>
+                  <th>Unit Price</th>
+                  <th>Total Price</th>
+                </tr>
+              </thead>
+              <tbody>
+              ${order?.order_info.order_items
+                ?.map(
+                  (item, itemIndex) => `
+                  <tr key=${itemIndex}>
+                    <td>
+                      <img
+                        className="img-fluid rounded"
+                        src=${item.product.product_image_path}
+                        alt=${item.product.name}
+                        width="50"
+                        height="50"
+                      />
+                      <a
+                        href="/products/${item.product.product_category_id}/${
+                    item.product_id
+                  }"
+                        style="text-decoration: none; color: black;"
+                      >
+                        ${item.product.name}
+                      </a>
+                    </td>
+                    <td>${item.quantity}</td>
+                    <td>${item.product.price.toLocaleString("en-IN")}</td>
+                    <td>${order?.order_info.total_amount.toLocaleString(
+                      "en-IN"
+                    )}</td>
+                  </tr>
+                `
+                )
+                .join("")}
+              </tbody>
+            </table>
+          </div>
+          
+          
+          <p>Total Price: ${total_price.toLocaleString("en-IN")}</p>
+          <p>Discount Price: ${discount_price.toLocaleString("en-IN")}</p>
+          <p>Price after Discount: ${price_after_discount.toLocaleString(
+            "en-IN"
+          )}</p>
+          <p>Thank you for shopping with us!</p>
+        `;
+
+          await sendEmail(recipientEmail, subject, body);
+        }
       } else {
         return res.status(400).json({ error: "Invalid action provided." });
       }
