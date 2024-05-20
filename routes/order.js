@@ -44,6 +44,7 @@ router.get("/", async (req, res) => {
     }
   }
 });
+
 router.get("/custom-discount", async (req, res) => {
   try {
     const authHeader = req?.headers?.authorization;

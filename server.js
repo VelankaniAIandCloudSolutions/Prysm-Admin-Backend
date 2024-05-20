@@ -185,6 +185,10 @@ app.use("/api/v1/homepg_img/:id", homepageImageRoute);
 // Orders
 const orderRoute = require("./routes/order");
 app.use("/api/v1/orders", orderRoute);
+
+const paymentTermRoute = require("./routes/paymentTerm");
+app.use("/api/v1/payment_term", paymentTermRoute);
+
 // app.use("/api/v1/homepg_img/:id", homepageImageRoute);
 
 app.listen(PORT, () => {
